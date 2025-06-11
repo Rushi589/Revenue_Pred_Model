@@ -1,0 +1,65 @@
+import streamlit as st
+import pickle
+import pandas as pd
+
+# Load the full pipeline (preprocessing + model)
+with open('pipeline (2).pkl', 'rb') as f:
+    pipeline = pickle.load(f)
+
+# Streamlit app UI
+st.title("📊 Revenue Prediction App")
+st.write("Please fill in the product details below:")
+
+# Product name options
+product_names = [
+    "Whey Protein", "Vitamin C", "Fish Oil", "Multivitamin", "Pre-Workout",
+    "BCAA", "Creatine", "Zinc", "Collagen Peptides", "Magnesium",
+    "Ashwagandha", "Melatonin", "Biotin", "Green Tea Extract", "Iron Supplement",
+    "Electrolyte Powder"
+]
+
+# Category options
+categories = [
+    "Vitamin", "Mineral", "Protein", "Performance", "Omega",
+    "Amino Acid", "Herbal", "Sleep Aid", "Fat Burner", "Hydration"
+]
+
+# Location options
+locations = ["Canada", "UK", "USA"]
+
+# Platform options
+platforms = ["iHerb", "Amazon", "Walmart"]
+
+# Input form
+with st.form("revenue_form"):
+    product_name = st.selectbox("Product Name", product_names)
+    category = st.selectbox("Category", categories)
+    units_sold = st.number_input("Units Sold", min_value=0)
+    price = st.number_input("Price (per unit)", min_value=0.0, step=0.01)
+    discount = st.number_input("Discount (%)", min_value=0.0, max_value=100.0, step=0.1)
+    units_returned = st.number_input("Units Returned", min_value=0)
+    location = st.selectbox("Location", locations)
+    platform = st.selectbox("Platform", platforms)
+
+    submit = st.form_submit_button("Predict Revenue")
+
+# On submit
+if submit:
+    try:
+        # Create input DataFrame (raw features, no preprocessing needed)
+        input_df = pd.DataFrame([{
+            "Product Name": product_name,
+            "Category": category,
+            "Units Sold": units_sold,
+            "Price": price,
+            "Discount": discount,
+            "Units Returned": units_returned,
+            "Location": location,
+            "Platform": platform
+        }])
+
+        # Predict using the full pipeline
+        prediction = pipeline.predict(input_df)[0]
+        st.success(f"Predicted Revenue: ₹ {prediction:,.2f}")
+    except Exception as e:
+        st.error(f"Error during prediction: {e}")
